@@ -1,10 +1,10 @@
-<p align="center"><img src="docs/assets/goviet-256.png" width="96" alt="GoViet"></p>
+<p align="center"><img src="assets/goviet.png" width="96" alt="GoViet"></p>
 
 # GoViet — bộ gõ tiếng Việt cho Windows
 
 GoViet là bộ gõ tiếng Việt gọn nhẹ như Unikey: một file `GoViet.exe`, chạy ở khay hệ thống, gõ Telex hoặc VNI ra Unicode trong mọi ứng dụng. Viết bằng Rust, không cần cài runtime.
 
-Trang giới thiệu: https://zenix-vn.github.io/go-viet-windows/ · Phát triển bởi [Zenix Labs](https://zenix.vn)
+Phát triển bởi [Zenix Labs](https://zenix.vn).
 
 ## Tính năng (v0.2)
 
@@ -17,7 +17,8 @@ Trang giới thiệu: https://zenix-vn.github.io/go-viet-windows/ · Phát tri�
 - **Ctrl+Shift** hoặc click icon khay để bật/tắt tiếng Việt (icon xanh: tiếng Việt, icon xám: tiếng Anh)
 - **Gõ tắt**: `vn` → Việt Nam, `VN` → VIỆT NAM; sửa bảng trong `%APPDATA%\GoViet\macros.txt`, lưu là dùng ngay
 - **Chuyển mã clipboard**: TCVN3 (ABC) ↔ Unicode, VNI Windows ↔ Unicode, Unicode tổ hợp → dựng sẵn, bỏ dấu. **Ctrl+Shift+F9** lặp lại lần chuyển trước
-- Menu chuột phải: Telex/VNI, kiểu đặt dấu, gõ tắt, chuyển mã, khởi động cùng Windows, giới thiệu
+- Menu chuột phải: Telex/VNI, kiểu đặt dấu, gõ tắt, chuyển mã, khởi động cùng Windows
+- Cửa sổ **Giới thiệu GoViet** trong app: phiên bản, phím tắt, tác giả Zenix Labs (liên kết tới zenix.vn)
 - Lưu cấu hình tại `%APPDATA%\GoViet\config.toml`
 
 ## Cách gõ
@@ -62,7 +63,6 @@ crates/
   goviet-win/      App Windows: hook bàn phím/chuột, SendInput, khay hệ thống, clipboard
     res/           Icon (bật/tắt) và manifest, nhúng vào .exe qua build.rs
   goviet-cli/      Gõ thử engine trên terminal
-docs/              Trang giới thiệu (GitHub Pages)
 tools/             Script sinh bảng mã TCVN3/VNI từ dữ liệu của Unikey
 ```
 

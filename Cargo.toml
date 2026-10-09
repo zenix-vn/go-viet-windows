@@ -7,7 +7,6 @@ version = "0.2.0"
 edition = "2021"
 license = "MIT"
 authors = ["Zenix Labs <https://zenix.vn>"]
-homepage = "https://zenix-vn.github.io/go-viet-windows/"
 repository = "https://github.com/zenix-vn/go-viet-windows"
 
 [profile.release]

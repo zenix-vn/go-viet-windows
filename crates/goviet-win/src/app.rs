@@ -32,19 +32,15 @@ use windows_sys::Win32::UI::Shell::{
 use windows_sys::Win32::UI::WindowsAndMessaging::{
     AppendMenuW, CallNextHookEx, CreatePopupMenu, CreateWindowExW, DefWindowProcW, DestroyIcon,
     DestroyMenu, DestroyWindow, DispatchMessageW, GetCursorPos, GetForegroundWindow, GetMessageW,
-    GetSystemMetrics, LoadImageW, MessageBoxIndirectW, PostMessageW, PostQuitMessage,
-    RegisterClassW, RegisterWindowMessageW, SetForegroundWindow, SetWindowsHookExW, TrackPopupMenu,
-    TranslateMessage, UnhookWindowsHookEx, HC_ACTION, HHOOK, HICON, IDYES, IMAGE_ICON,
-    KBDLLHOOKSTRUCT, LR_DEFAULTCOLOR, MB_USERICON, MB_YESNO, MF_CHECKED, MF_POPUP, MF_SEPARATOR,
-    MF_STRING, MSG, MSGBOXPARAMSW, SM_CXICON, SM_CXSMICON, SW_SHOWNORMAL, TPM_NONOTIFY,
-    TPM_RETURNCMD, TPM_RIGHTBUTTON, WH_KEYBOARD_LL, WH_MOUSE_LL, WM_APP, WM_COMMAND, WM_DESTROY,
-    WM_HOTKEY, WM_KEYDOWN, WM_KEYUP, WM_LBUTTONDOWN, WM_LBUTTONUP, WM_MBUTTONDOWN, WM_NULL,
-    WM_RBUTTONDOWN, WM_RBUTTONUP, WM_SYSKEYDOWN, WM_SYSKEYUP, WNDCLASSW, WS_OVERLAPPED,
+    GetSystemMetrics, LoadImageW, PostMessageW, PostQuitMessage, RegisterClassW,
+    RegisterWindowMessageW, SetForegroundWindow, SetWindowsHookExW, TrackPopupMenu,
+    TranslateMessage, UnhookWindowsHookEx, HC_ACTION, HHOOK, HICON, IMAGE_ICON, KBDLLHOOKSTRUCT,
+    LR_DEFAULTCOLOR, MF_CHECKED, MF_POPUP, MF_SEPARATOR, MF_STRING, MSG, SM_CXICON, SM_CXSMICON,
+    SW_SHOWNORMAL, TPM_NONOTIFY, TPM_RETURNCMD, TPM_RIGHTBUTTON, WH_KEYBOARD_LL, WH_MOUSE_LL,
+    WM_APP, WM_COMMAND, WM_DESTROY, WM_HOTKEY, WM_KEYDOWN, WM_KEYUP, WM_LBUTTONDOWN, WM_LBUTTONUP,
+    WM_MBUTTONDOWN, WM_NULL, WM_RBUTTONDOWN, WM_RBUTTONUP, WM_SYSKEYDOWN, WM_SYSKEYUP, WNDCLASSW,
+    WS_OVERLAPPED,
 };
-
-/// Trang giới thiệu GoViet và trang của tác giả.
-pub const HOMEPAGE: &str = "https://zenix-vn.github.io/go-viet-windows/";
-pub const AUTHOR_URL: &str = "https://zenix.vn";
 
 const WM_TRAY: u32 = WM_APP + 1;
 const TRAY_ID: u32 = 1;
@@ -63,7 +59,6 @@ const CMD_ABOUT: usize = 1006;
 const CMD_EXIT: usize = 1007;
 const CMD_MACROS: usize = 1008;
 const CMD_EDIT_MACROS: usize = 1009;
-const CMD_AUTHOR: usize = 1010;
 const CMD_CONVERT_LAST: usize = 1100;
 /// `CMD_CONVERT_BASE + i` = `Conversion::ALL[i]`.
 const CMD_CONVERT_BASE: usize = 1101;
@@ -142,23 +137,8 @@ fn is_macro_trigger(vk: u16) -> bool {
     )
 }
 
-fn open_url(target: &str) {
-    let verb = wide("open");
-    let file = wide(target);
-    unsafe {
-        ShellExecuteW(
-            null_mut(),
-            verb.as_ptr(),
-            file.as_ptr(),
-            null(),
-            null(),
-            SW_SHOWNORMAL,
-        );
-    }
-}
-
 /// Icon nhúng trong GoViet.exe; dùng icon vẽ tạm nếu không tải được.
-fn load_icon(id: u16, size_metric: i32, fallback: (&str, u32)) -> HICON {
+pub(crate) fn load_icon(id: u16, size_metric: i32, fallback: (&str, u32)) -> HICON {
     unsafe {
         let size = GetSystemMetrics(size_metric);
         let icon = LoadImageW(
@@ -409,7 +389,6 @@ impl App {
             }
             CMD_EDIT_MACROS => self.edit_macros(),
             CMD_STARTUP => startup::set_enabled(!startup::is_enabled()),
-            CMD_AUTHOR => open_url(AUTHOR_URL),
             CMD_CONVERT_LAST => self.convert_clipboard(self.config.last_conversion),
             id if (CMD_CONVERT_BASE..CMD_CONVERT_BASE + Conversion::ALL.len()).contains(&id) => {
                 self.convert_clipboard(Conversion::ALL[id - CMD_CONVERT_BASE])
@@ -473,35 +452,6 @@ fn menu_submenu(menu: Menu, sub: Menu, text: &str) {
     }
 }
 
-fn show_about(hwnd: HWND) {
-    let text = wide(&format!(
-        "GoViet {}\n\
-         Bộ gõ tiếng Việt cho Windows: nhẹ, nhanh, miễn phí.\n\n\
-         Phát triển bởi Zenix Labs · {AUTHOR_URL}\n\
-         Mã nguồn: github.com/zenix-vn/go-viet-windows\n\n\
-         Ctrl+Shift: bật/tắt tiếng Việt\n\
-         Ctrl+Shift+F9: chuyển mã clipboard\n\n\
-         Mở trang giới thiệu GoViet?",
-        env!("CARGO_PKG_VERSION")
-    ));
-    let title = wide("Giới thiệu GoViet");
-    let params = MSGBOXPARAMSW {
-        cbSize: std::mem::size_of::<MSGBOXPARAMSW>() as u32,
-        hwndOwner: hwnd,
-        hInstance: unsafe { GetModuleHandleW(null()) },
-        lpszText: text.as_ptr(),
-        lpszCaption: title.as_ptr(),
-        dwStyle: MB_YESNO | MB_USERICON,
-        lpszIcon: ICON_ON as usize as *const u16,
-        dwContextHelpId: 0,
-        lpfnMsgBoxCallback: None,
-        dwLanguageId: 0,
-    };
-    if unsafe { MessageBoxIndirectW(&params) } == IDYES {
-        open_url(HOMEPAGE);
-    }
-}
-
 fn show_menu(hwnd: HWND) {
     // Đọc trạng thái rồi trả lại ngay: menu chạy vòng lặp riêng, trong lúc đó hook vẫn cần APP.
     let Some(config) = with_app(|app| app.config) else {
@@ -558,7 +508,6 @@ fn show_menu(hwnd: HWND) {
         menu_item(menu, CMD_STARTUP, "Khởi động cùng Windows", on_startup);
         menu_separator(menu);
         menu_item(menu, CMD_ABOUT, "Giới thiệu GoViet", false);
-        menu_item(menu, CMD_AUTHOR, "Zenix Labs (zenix.vn)", false);
         menu_item(menu, CMD_EXIT, "Thoát", false);
 
         let mut pt = POINT { x: 0, y: 0 };
@@ -578,7 +527,7 @@ fn show_menu(hwnd: HWND) {
 
         match cmd {
             0 => {}
-            CMD_ABOUT => show_about(hwnd),
+            CMD_ABOUT => crate::about::show(hwnd, ICON_ON),
             CMD_EXIT => {
                 DestroyWindow(hwnd);
             }
