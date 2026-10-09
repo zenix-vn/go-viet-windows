@@ -1,0 +1,9 @@
+[package]
+name = "goviet-engine"
+description = "Bộ xử lý gõ tiếng Việt (Telex/VNI) thuần Rust, không phụ thuộc hệ điều hành"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]

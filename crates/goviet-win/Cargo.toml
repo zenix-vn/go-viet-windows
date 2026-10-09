@@ -1,0 +1,30 @@
+[package]
+name = "goviet-win"
+description = "GoViet cho Windows: bộ gõ tiếng Việt chạy ở khay hệ thống"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[[bin]]
+name = "GoViet"
+path = "src/main.rs"
+
+[features]
+# Biên dịch kiểm tra (cargo check) phần mã Windows trên Linux/macOS.
+check-on-other-os = []
+
+[dependencies]
+goviet-engine = { path = "../goviet-engine" }
+windows-sys = { version = "0.59", features = [
+    "Win32_Foundation",
+    "Win32_Graphics_Gdi",
+    "Win32_Security",
+    "Win32_System_LibraryLoader",
+    "Win32_System_Registry",
+    "Win32_System_Threading",
+    "Win32_UI_HiDpi",
+    "Win32_UI_Input_KeyboardAndMouse",
+    "Win32_UI_Shell",
+    "Win32_UI_WindowsAndMessaging",
+] }

@@ -1,0 +1,10 @@
+[package]
+name = "goviet-cli"
+description = "Gõ thử engine GoViet trên terminal"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[dependencies]
+goviet-engine = { path = "../goviet-engine" }
