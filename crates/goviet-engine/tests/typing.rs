@@ -226,3 +226,42 @@ fn plain_append_passes_through() {
     assert_eq!(e.process_key(' '), Action::PassThrough);
     assert_eq!(e.current_word(), "");
 }
+
+#[test]
+fn open_uo_syllable() {
+    check(
+        telex,
+        &[
+            ("thuowr", "thuở"),
+            ("huow", "huơ"),
+            ("nguowif", "người"),
+            ("dduowcj", "được"),
+            ("ruwowuj", "rượu"),
+        ],
+    );
+}
+
+#[test]
+fn long_strings_pass_through() {
+    let url = "httpsgithubcomzenixvngovietwindowsasfj";
+    assert_eq!(telex(url), url);
+}
+
+#[test]
+fn macro_expansion() {
+    use goviet_engine::Macros;
+    let macros = Macros::parse("vn = Việt Nam\n");
+    let mut e = Engine::new(Options::default());
+    e.process_key('V');
+    e.process_key('n');
+    assert_eq!(
+        e.expand_macro(&macros),
+        Some(Action::Replace {
+            backspaces: 2,
+            text: "Việt Nam".into()
+        })
+    );
+    assert_eq!(e.current_word(), "");
+    e.process_key('x');
+    assert_eq!(e.expand_macro(&macros), None);
+}

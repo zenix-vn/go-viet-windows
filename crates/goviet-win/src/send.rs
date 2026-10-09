@@ -25,7 +25,12 @@ fn key(vk: u16, scan: u16, flags: KEYBD_EVENT_FLAGS) -> INPUT {
 
 /// Xóa `backspaces` ký tự trước con trỏ rồi gõ `text`.
 pub fn replace(backspaces: usize, text: &str) {
-    let mut inputs = Vec::with_capacity(backspaces * 2 + text.len() * 2);
+    replace_then_key(backspaces, text, None);
+}
+
+/// Như [`replace`], sau đó gõ lại phím `vk` (ví dụ dấu cách đã kích hoạt gõ tắt).
+pub fn replace_then_key(backspaces: usize, text: &str, vk: Option<u16>) {
+    let mut inputs = Vec::with_capacity(backspaces * 2 + text.len() * 2 + 2);
     for _ in 0..backspaces {
         inputs.push(key(VK_BACK, 0, 0));
         inputs.push(key(VK_BACK, 0, KEYEVENTF_KEYUP));
@@ -33,6 +38,10 @@ pub fn replace(backspaces: usize, text: &str) {
     for unit in text.encode_utf16() {
         inputs.push(key(0, unit, KEYEVENTF_UNICODE));
         inputs.push(key(0, unit, KEYEVENTF_UNICODE | KEYEVENTF_KEYUP));
+    }
+    if let Some(vk) = vk {
+        inputs.push(key(vk, 0, 0));
+        inputs.push(key(vk, 0, KEYEVENTF_KEYUP));
     }
     if inputs.is_empty() {
         return;

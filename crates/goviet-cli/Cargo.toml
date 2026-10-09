@@ -4,6 +4,7 @@ description = "Gõ thử engine GoViet trên terminal"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+authors.workspace = true
 publish = false
 
 [dependencies]

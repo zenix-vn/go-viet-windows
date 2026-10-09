@@ -1,7 +1,7 @@
 //! Cấu hình lưu tại `%APPDATA%\GoViet\config.toml` (dạng `khóa = giá trị` đơn giản).
 #![allow(dead_code)]
 
-use goviet_engine::{InputMethod, Options};
+use goviet_engine::{Conversion, InputMethod, Options};
 use std::path::PathBuf;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -10,6 +10,10 @@ pub struct Config {
     pub vietnamese: bool,
     pub method: InputMethod,
     pub modern_tone: bool,
+    /// Bật gõ tắt.
+    pub macros: bool,
+    /// Kiểu chuyển mã clipboard dùng lần trước (Ctrl+Shift+F9 lặp lại).
+    pub last_conversion: Conversion,
 }
 
 impl Default for Config {
@@ -18,6 +22,8 @@ impl Default for Config {
             vietnamese: true,
             method: InputMethod::Telex,
             modern_tone: false,
+            macros: true,
+            last_conversion: Conversion::TcvnToUnicode,
         }
     }
 }
@@ -44,6 +50,12 @@ impl Config {
             match key.trim() {
                 "vietnamese" => c.vietnamese = value == "true",
                 "modern_tone" => c.modern_tone = value == "true",
+                "macros" => c.macros = value == "true",
+                "last_conversion" => {
+                    if let Some(conv) = Conversion::from_id(value) {
+                        c.last_conversion = conv;
+                    }
+                }
                 "method" => {
                     c.method = if value.eq_ignore_ascii_case("vni") {
                         InputMethod::Vni
@@ -59,19 +71,31 @@ impl Config {
 
     pub fn to_text(self) -> String {
         format!(
-            "# Cấu hình GoViet\nvietnamese = {}\nmethod = \"{}\"\nmodern_tone = {}\n",
+            "# Cấu hình GoViet\nvietnamese = {}\nmethod = \"{}\"\nmodern_tone = {}\nmacros = {}\nlast_conversion = \"{}\"\n",
             self.vietnamese,
             match self.method {
                 InputMethod::Telex => "telex",
                 InputMethod::Vni => "vni",
             },
-            self.modern_tone
+            self.modern_tone,
+            self.macros,
+            self.last_conversion.id()
         )
     }
 
-    fn path() -> Option<PathBuf> {
+    /// Thư mục `%APPDATA%\\GoViet`.
+    pub fn dir() -> Option<PathBuf> {
         let base = std::env::var_os("APPDATA")?;
-        Some(PathBuf::from(base).join("GoViet").join("config.toml"))
+        Some(PathBuf::from(base).join("GoViet"))
+    }
+
+    fn path() -> Option<PathBuf> {
+        Some(Self::dir()?.join("config.toml"))
+    }
+
+    /// File bảng gõ tắt `%APPDATA%\\GoViet\\macros.txt`.
+    pub fn macros_path() -> Option<PathBuf> {
+        Some(Self::dir()?.join("macros.txt"))
     }
 
     pub fn load() -> Config {
@@ -101,6 +125,8 @@ mod tests {
             vietnamese: false,
             method: InputMethod::Vni,
             modern_tone: true,
+            macros: false,
+            last_conversion: Conversion::StripAccents,
         };
         assert_eq!(Config::parse(&c.to_text()), c);
     }

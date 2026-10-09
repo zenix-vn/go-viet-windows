@@ -8,6 +8,9 @@
 mod config;
 
 #[cfg(any(windows, feature = "check-on-other-os"))]
+mod clipboard;
+
+#[cfg(any(windows, feature = "check-on-other-os"))]
 mod app;
 #[cfg(any(windows, feature = "check-on-other-os"))]
 mod icon;

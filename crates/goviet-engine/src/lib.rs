@@ -12,8 +12,13 @@
 //! ```
 
 mod chars;
+mod convert;
 mod engine;
+mod legacy_tables;
+mod macros;
 mod syllable;
 
 pub use chars::{Mark, Tone};
+pub use convert::{convert, Conversion};
 pub use engine::{Action, Engine, InputMethod, Options};
+pub use macros::{Macros, DEFAULT_MACROS};

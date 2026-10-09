@@ -1,6 +1,9 @@
 use crate::chars::{decompose, Letter, Mark, Tone};
 use crate::syllable::{is_valid, split, tone_position};
 
+/// Số phím tối đa của một từ còn được xử lý dấu (âm tiết dài nhất cần khoảng 10 phím).
+const MAX_WORD_KEYS: usize = 24;
+
 /// Kiểu gõ.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum InputMethod {
@@ -65,6 +68,15 @@ impl Engine {
         self.shown.iter().collect()
     }
 
+    /// Thay từ vừa gõ bằng nội dung gõ tắt (gọi khi người dùng kết thúc từ).
+    pub fn expand_macro(&mut self, macros: &crate::Macros) -> Option<Action> {
+        let word = self.current_word();
+        let text = macros.lookup(&word)?;
+        let backspaces = self.shown.len();
+        self.reset();
+        Some(Action::Replace { backspaces, text })
+    }
+
     /// Phím có thuộc về từ đang gõ không. Phím khác (dấu cách, dấu câu...) kết thúc từ.
     pub fn is_word_key(&self, c: char) -> bool {
         c.is_ascii_alphabetic() || (self.opts.method == InputMethod::Vni && c.is_ascii_digit())
@@ -77,6 +89,11 @@ impl Engine {
             return Action::PassThrough;
         }
         self.keys.push(c);
+        if self.keys.len() > MAX_WORD_KEYS {
+            // Chuỗi quá dài (URL, mã nguồn...) không thể là một âm tiết: để phím đi thẳng.
+            self.shown.push(c);
+            return Action::PassThrough;
+        }
         let next = compose(&self.keys, self.opts);
         let action = diff(&self.shown, &next, c);
         self.shown = next;
@@ -91,7 +108,10 @@ impl Engine {
         }
         // Dựng lại chuỗi phím từ phần còn lại để có thể tiếp tục bỏ dấu cho từ này.
         let keys = encode(&self.shown, self.opts.method);
-        if compose(&keys, self.opts) == self.shown {
+        // "đượ" (xóa từ "được") khác dạng hiển thị chuẩn "đuợ" nhưng vẫn tiếp tục gõ được.
+        if compose(&keys, self.opts) == self.shown
+            || compose_with(&keys, self.opts, false) == self.shown
+        {
             self.keys = keys;
         } else {
             self.reset();
@@ -154,6 +174,18 @@ impl Word {
         f(self);
         self.push_literal(key);
         self.literal = true;
+    }
+
+    /// "ươ" không bao giờ đứng cuối âm tiết: vần mở viết là "uơ" (thuở, huơ).
+    /// Khi gõ tiếp phụ âm cuối hoặc i/u (được, người), từ được tính lại và trở về "ươ".
+    fn fix_open_uo(&mut self) {
+        let s = split(&self.letters);
+        if s.len() == 2 && s.end == self.letters.len() {
+            let (u, o) = (self.letters[s.start], self.letters[s.start + 1]);
+            if u.base == 'u' && u.mark == Mark::Horn && o.base == 'o' && o.mark == Mark::Horn {
+                self.letters[s.start].mark = Mark::None;
+            }
+        }
     }
 
     fn vowel_range(&self) -> std::ops::Range<usize> {
@@ -323,9 +355,16 @@ impl Word {
 
 /// Dựng chuỗi hiển thị từ chuỗi phím.
 fn compose(keys: &[char], opts: Options) -> Vec<char> {
+    compose_with(keys, opts, true)
+}
+
+fn compose_with(keys: &[char], opts: Options, fix_open_uo: bool) -> Vec<char> {
     let mut w = Word::default();
     for &k in keys {
         w.apply_key(k, opts.method);
+    }
+    if fix_open_uo && !w.literal {
+        w.fix_open_uo();
     }
     if w.literal || w.valid() {
         w.render(opts.modern_tone)

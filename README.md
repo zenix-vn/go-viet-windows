@@ -1,8 +1,12 @@
+<p align="center"><img src="docs/assets/goviet-256.png" width="96" alt="GoViet"></p>
+
 # GoViet — bộ gõ tiếng Việt cho Windows
 
 GoViet là bộ gõ tiếng Việt gọn nhẹ như Unikey: một file `GoViet.exe`, chạy ở khay hệ thống, gõ Telex hoặc VNI ra Unicode trong mọi ứng dụng. Viết bằng Rust, không cần cài runtime.
 
-## Tính năng (v0.1)
+Trang giới thiệu: https://zenix-vn.github.io/go-viet-windows/ · Phát triển bởi [Zenix Labs](https://zenix.vn)
+
+## Tính năng (v0.2)
 
 - Kiểu gõ **Telex** và **VNI**, bảng mã Unicode dựng sẵn
 - Bỏ dấu tự do: `tieengs`, `tiesng`, `tiengse` đều ra `tiếng`
@@ -10,8 +14,10 @@ GoViet là bộ gõ tiếng Việt gọn nhẹ như Unikey: một file `GoViet.e
 - Gõ lặp để hủy dấu: `ass` → `as`, `aaa` → `aa`, `ddd` → `dd`
 - Tự giữ nguyên từ tiếng Anh: `class`, `text`, `window`, `email` không bị biến dạng
 - Backspace xong vẫn bỏ dấu tiếp được cho từ đang gõ
-- **Ctrl+Shift** hoặc click icon khay để bật/tắt tiếng Việt (icon **V** xanh / **E** đỏ)
-- Menu chuột phải: Telex/VNI, kiểu đặt dấu, khởi động cùng Windows
+- **Ctrl+Shift** hoặc click icon khay để bật/tắt tiếng Việt (icon xanh: tiếng Việt, icon xám: tiếng Anh)
+- **Gõ tắt**: `vn` → Việt Nam, `VN` → VIỆT NAM; sửa bảng trong `%APPDATA%\GoViet\macros.txt`, lưu là dùng ngay
+- **Chuyển mã clipboard**: TCVN3 (ABC) ↔ Unicode, VNI Windows ↔ Unicode, Unicode tổ hợp → dựng sẵn, bỏ dấu. **Ctrl+Shift+F9** lặp lại lần chuyển trước
+- Menu chuột phải: Telex/VNI, kiểu đặt dấu, gõ tắt, chuyển mã, khởi động cùng Windows, giới thiệu
 - Lưu cấu hình tại `%APPDATA%\GoViet\config.toml`
 
 ## Cách gõ
@@ -52,9 +58,12 @@ Kiểm tra kiểu phần mã Windows trên Linux/macOS: `cargo check -p goviet-w
 
 ```
 crates/
-  goviet-engine/   Engine thuần Rust: Telex/VNI, đặt dấu, kiểm tra âm tiết (không phụ thuộc Windows)
-  goviet-win/      App Windows: hook bàn phím/chuột, SendInput, icon khay, menu, cấu hình
+  goviet-engine/   Engine thuần Rust: Telex/VNI, đặt dấu, kiểm tra âm tiết, gõ tắt, chuyển mã
+  goviet-win/      App Windows: hook bàn phím/chuột, SendInput, khay hệ thống, clipboard
+    res/           Icon (bật/tắt) và manifest, nhúng vào .exe qua build.rs
   goviet-cli/      Gõ thử engine trên terminal
+docs/              Trang giới thiệu (GitHub Pages)
+tools/             Script sinh bảng mã TCVN3/VNI từ dữ liệu của Unikey
 ```
 
 Cơ chế giống Unikey: `WH_KEYBOARD_LL` bắt phím → engine tính từ có dấu → `SendInput` gửi Backspace để xóa phần cũ rồi gõ chuỗi Unicode mới. Phím do GoViet gửi được đánh dấu bằng `dwExtraInfo` để hook bỏ qua. Click chuột, đổi cửa sổ, phím mũi tên hay dấu câu đều bắt đầu từ mới.
@@ -68,10 +77,10 @@ Cơ chế giống Unikey: `WH_KEYBOARD_LL` bắt phím → engine tính từ có
 ## Lộ trình
 
 - [ ] Sửa lỗi ô tự gợi ý trên trình duyệt / Excel
-- [ ] Gõ tắt (macro), danh sách ứng dụng loại trừ
-- [ ] Bảng mã TCVN3, VNI-Windows, chuyển mã clipboard
-- [ ] Icon và thông tin phiên bản nhúng vào .exe, bộ cài đặt, ký số
+- [x] Gõ tắt, chuyển mã clipboard, icon và thông tin phiên bản trong .exe
+- [ ] Danh sách ứng dụng loại trừ / nhớ chế độ V–E theo ứng dụng
+- [ ] Bộ cài đặt, ký số, tự cập nhật
 
-## Giấy phép
+## Tác giả & giấy phép
 
-MIT
+GoViet do [Zenix Labs](https://zenix.vn) phát triển, phát hành theo giấy phép MIT. Bảng mã TCVN3/VNI được sinh từ dữ liệu của bộ chuyển mã vnconv trong Unikey (Phạm Kim Long).

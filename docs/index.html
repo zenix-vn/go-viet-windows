@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GoViet — bộ gõ tiếng Việt cho Windows</title>
+<meta name="description" content="GoViet là bộ gõ tiếng Việt miễn phí cho Windows: Telex, VNI, gõ tắt, chuyển mã clipboard. Một file nhỏ, không cần cài đặt. Phát triển bởi Zenix Labs.">
+<meta property="og:title" content="GoViet — bộ gõ tiếng Việt cho Windows">
+<meta property="og:description" content="Telex, VNI, gõ tắt, chuyển mã clipboard. Một file nhỏ, miễn phí, mã nguồn mở.">
+<meta property="og:image" content="assets/goviet-512.png">
+<link rel="icon" href="assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blue: #1D5BF0;
+    --blue-deep: #1336B8;
+    --ink: #0E1A3A;
+    --muted: #55617F;
+    --paper: #F5F8FF;
+    --line: #D9E1F5;
+    --mark: #FFD84D;
+    --surface: #FFFFFF;
+    --on-blue: #FFFFFF;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --blue: #6E95FF; --blue-deep: #A9C0FF; --ink: #E8EDFA; --muted: #9AA6C4;
+      --paper: #0C1430; --line: #233057; --mark: #8A7213; --surface: #121C3F; --on-blue: #0C1430;
+    }
+  }
+  :root[data-theme="dark"] {
+    --blue: #6E95FF; --blue-deep: #A9C0FF; --ink: #E8EDFA; --muted: #9AA6C4;
+    --paper: #0C1430; --line: #233057; --mark: #8A7213; --surface: #121C3F; --on-blue: #0C1430;
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: "Be Vietnam Pro", system-ui, sans-serif;
+    font-size: 17px; line-height: 1.6;
+  }
+  a { color: var(--blue); }
+  a:focus-visible, button:focus-visible { outline: 3px solid var(--mark); outline-offset: 3px; border-radius: 4px; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+  header.top { display: flex; align-items: center; justify-content: space-between; padding: 22px 0; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 20px; color: var(--ink); text-decoration: none; }
+  .brand img { width: 36px; height: 36px; }
+  .top nav a { color: var(--muted); text-decoration: none; margin-left: 22px; font-weight: 500; font-size: 15px; }
+  .top nav a:hover { color: var(--ink); }
+
+  /* Hero */
+  .hero { display: grid; grid-template-columns: 1fr 1.05fr; gap: 56px; align-items: center; padding: 48px 0 88px; }
+  h1 { font-size: clamp(40px, 6vw, 68px); line-height: 1.08; letter-spacing: -0.02em; font-weight: 800; margin: 0 0 22px; }
+  .lede { font-size: 19px; color: var(--muted); max-width: 30em; margin: 0 0 32px; }
+  .actions { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 10px; padding: 15px 26px; border-radius: 12px;
+    background: var(--blue); color: var(--on-blue); font-weight: 600; text-decoration: none; font-size: 17px;
+  }
+  .btn:hover { background: var(--blue-deep); }
+  .btn svg { width: 18px; height: 18px; }
+  .ghost { color: var(--ink); font-weight: 500; text-decoration: none; border-bottom: 2px solid var(--line); padding-bottom: 2px; }
+  .ghost:hover { border-color: var(--blue); }
+  .fine { margin-top: 18px; font-size: 14px; color: var(--muted); }
+
+  /* Typing demo */
+  .demo {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 20px;
+    padding: 30px 30px 26px; min-height: 300px; display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .screen { font-size: clamp(34px, 4.6vw, 54px); font-weight: 600; line-height: 1.25; min-height: 2.6em; letter-spacing: -0.01em; word-break: break-word; }
+  .screen .ch { border-radius: 6px; transition: background-color .5s ease; }
+  .screen .ch.new { background: var(--mark); }
+  .caret { display: inline-block; width: 3px; height: 0.95em; background: var(--blue); vertical-align: -0.12em; margin-left: 2px; animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .keys { display: flex; flex-wrap: wrap; gap: 6px; min-height: 40px; margin-top: 24px; }
+  .key {
+    min-width: 34px; height: 36px; padding: 0 9px; border-radius: 8px; display: inline-grid; place-items: center;
+    border: 1px solid var(--line); border-bottom-width: 3px; font-weight: 500; font-size: 16px; color: var(--muted); background: var(--paper);
+  }
+  .key.mod { color: var(--ink); border-color: var(--blue); }
+  .key.space { min-width: 64px; }
+  .demo-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 18px; font-size: 14px; color: var(--muted); }
+  .switch { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+  .switch button { font: inherit; font-size: 14px; border: 0; background: transparent; color: var(--muted); padding: 6px 14px; cursor: pointer; }
+  .switch button[aria-pressed="true"] { background: var(--blue); color: var(--on-blue); }
+
+  section { padding: 72px 0; border-top: 1px solid var(--line); }
+  h2 { font-size: clamp(28px, 3.4vw, 38px); line-height: 1.2; letter-spacing: -0.015em; margin: 0 0 14px; font-weight: 800; }
+  .intro { color: var(--muted); max-width: 36em; margin: 0 0 36px; }
+
+  /* Features: two columns of plain text, no cards */
+  .features { display: grid; grid-template-columns: repeat(2, 1fr); gap: 34px 56px; }
+  .features h3 { font-size: 19px; margin: 0 0 6px; font-weight: 600; }
+  .features p { margin: 0; color: var(--muted); }
+  .features kbd, td kbd, .faq kbd {
+    font-family: inherit; font-weight: 600; font-size: 0.9em; color: var(--ink);
+    border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 6px; padding: 1px 7px; background: var(--surface);
+  }
+
+  /* Cheat sheet */
+  .sheet { width: 100%; border-collapse: collapse; font-size: 17px; }
+  .sheet th, .sheet td { text-align: left; padding: 14px 16px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .sheet th { font-weight: 600; color: var(--muted); font-size: 15px; }
+  .sheet td:first-child { font-weight: 600; white-space: nowrap; }
+  .sheet .ex { color: var(--muted); }
+  .table-scroll { overflow-x: auto; }
+
+  /* Split rows for clipboard / macros */
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: start; }
+  .sample {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 22px 24px;
+    font-size: 16px; line-height: 1.9;
+  }
+  .sample .row { display: grid; grid-template-columns: 6.5em 1fr; gap: 12px; }
+  .sample .row span:first-child { color: var(--muted); }
+  .sample + .sample { margin-top: 14px; }
+
+  .faq dt { font-weight: 600; margin-top: 22px; }
+  .faq dd { margin: 4px 0 0; color: var(--muted); max-width: 44em; }
+
+  footer { border-top: 1px solid var(--line); padding: 36px 0 48px; color: var(--muted); font-size: 15px; }
+  footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; }
+  footer a { color: var(--ink); font-weight: 600; text-decoration: none; }
+  footer a:hover { color: var(--blue); }
+
+  @media (max-width: 860px) {
+    .hero, .split { grid-template-columns: 1fr; gap: 36px; }
+    .hero { padding-top: 16px; }
+    .features { grid-template-columns: 1fr; }
+    .top nav a:not(:last-child) { display: none; }
+  }
+  @media (max-width: 480px) {
+    .wrap { padding: 0 16px; }
+    .demo { padding: 22px 20px; }
+    .sheet th, .sheet td { padding: 12px 10px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .caret { animation: none; }
+    .screen .ch { transition: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="#"><img src="assets/goviet-256.png" alt="">GoViet</a>
+    <nav aria-label="Mục lục">
+      <a href="#tinh-nang">Tính năng</a>
+      <a href="#cach-go">Cách gõ</a>
+      <a href="#hoi-dap">Hỏi đáp</a>
+      <a href="https://github.com/zenix-vn/go-viet-windows">GitHub</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="hero">
+      <div>
+        <h1>Gõ tiếng Việt trên Windows, nhẹ như không.</h1>
+        <p class="lede">GoViet là bộ gõ Telex và VNI gói gọn trong một file. Bật lên là gõ được trong Word, Chrome, Zalo hay bất kỳ ứng dụng nào. Miễn phí và mã nguồn mở.</p>
+        <div class="actions">
+          <a class="btn" href="https://github.com/zenix-vn/go-viet-windows/releases/latest">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/></svg>
+            Tải GoViet cho Windows
+          </a>
+          <a class="ghost" href="https://github.com/zenix-vn/go-viet-windows">Xem mã nguồn</a>
+        </div>
+        <p class="fine">Chạy trên Windows 10 và 11, không cần cài đặt, file dưới 1 MB.</p>
+      </div>
+
+      <div class="demo" aria-label="Minh họa gõ Telex">
+        <div class="screen" id="screen" aria-live="off"></div>
+        <div>
+          <div class="keys" id="keys" aria-hidden="true"></div>
+          <div class="demo-foot">
+            <span>Phím bạn gõ</span>
+            <div class="switch" role="group" aria-label="Kiểu gõ minh họa">
+              <button type="button" data-method="telex" aria-pressed="true">Telex</button>
+              <button type="button" data-method="vni" aria-pressed="false">VNI</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section id="tinh-nang">
+      <h2>Đủ những gì cần cho việc gõ hằng ngày</h2>
+      <p class="intro">Không quảng cáo, không tài khoản, không chạy ngầm thứ gì khác. GoViet nằm ở khay hệ thống: icon xanh là đang gõ tiếng Việt, icon xám là tiếng Anh.</p>
+      <div class="features">
+        <div>
+          <h3>Bỏ dấu tự do</h3>
+          <p>Gõ dấu ở đâu cũng được: <kbd>tieengs</kbd>, <kbd>tiesng</kbd> hay <kbd>tiengse</kbd> đều ra “tiếng”. Gõ lặp phím dấu để bỏ dấu vừa gõ.</p>
+        </div>
+        <div>
+          <h3>Không làm hỏng chữ tiếng Anh</h3>
+          <p>Những từ như “class”, “text”, “window” được giữ nguyên, nên viết code hay gõ email song ngữ không phải tắt bộ gõ.</p>
+        </div>
+        <div>
+          <h3>Gõ tắt</h3>
+          <p>Tự định nghĩa từ tắt như <kbd>vn</kbd> thành “Việt Nam”. Gõ <kbd>VN</kbd> sẽ ra “VIỆT NAM”, chữ hoa theo đúng cách bạn gõ.</p>
+        </div>
+        <div>
+          <h3>Chuyển mã clipboard</h3>
+          <p>Chuyển văn bản cũ TCVN3 (ABC), VNI Windows sang Unicode và ngược lại, hoặc bỏ dấu toàn bộ đoạn văn. Nhấn <kbd>Ctrl+Shift+F9</kbd> để lặp lại lần trước.</p>
+        </div>
+        <div>
+          <h3>Đặt dấu kiểu cũ hoặc kiểu mới</h3>
+          <p>Chọn “hòa, thủy” như thói quen lâu nay, hoặc “hoà, thuỷ” theo cách đặt dấu mới.</p>
+        </div>
+        <div>
+          <h3>Bật tắt bằng một phím</h3>
+          <p>Nhấn <kbd>Ctrl+Shift</kbd> hoặc click vào icon để chuyển giữa tiếng Việt và tiếng Anh. Có thể đặt khởi động cùng Windows.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="cach-go">
+      <h2>Bảng gõ nhanh</h2>
+      <p class="intro">Gõ chữ cái trước, sau đó gõ phím dấu. Thứ tự các phím dấu trong một từ không quan trọng.</p>
+      <div class="table-scroll">
+        <table class="sheet">
+          <thead><tr><th>Dấu</th><th>Telex</th><th>VNI</th><th>Ví dụ (Telex)</th></tr></thead>
+          <tbody>
+            <tr><td>Sắc, huyền, hỏi, ngã, nặng</td><td><kbd>s</kbd> <kbd>f</kbd> <kbd>r</kbd> <kbd>x</kbd> <kbd>j</kbd></td><td><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd> <kbd>5</kbd></td><td class="ex">mas → má, maf → mà</td></tr>
+            <tr><td>Xóa dấu thanh</td><td><kbd>z</kbd></td><td><kbd>0</kbd></td><td class="ex">masz → ma</td></tr>
+            <tr><td>â, ê, ô</td><td><kbd>aa</kbd> <kbd>ee</kbd> <kbd>oo</kbd></td><td><kbd>a6</kbd> <kbd>e6</kbd> <kbd>o6</kbd></td><td class="ex">caan → cân</td></tr>
+            <tr><td>ă</td><td><kbd>aw</kbd></td><td><kbd>a8</kbd></td><td class="ex">awn → ăn</td></tr>
+            <tr><td>ơ, ư, ươ</td><td><kbd>ow</kbd> <kbd>uw</kbd> <kbd>uow</kbd></td><td><kbd>o7</kbd> <kbd>u7</kbd> <kbd>uo7</kbd></td><td class="ex">nguowif → người</td></tr>
+            <tr><td>đ</td><td><kbd>dd</kbd></td><td><kbd>d9</kbd></td><td class="ex">ddi → đi</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <div class="split">
+        <div>
+          <h2>Văn bản cũ sang Unicode trong hai bước</h2>
+          <p class="intro">Copy đoạn văn bản đang hiện sai font, click chuột phải vào icon GoViet, chọn “Chuyển mã clipboard” rồi dán lại. GoViet hỗ trợ TCVN3 (ABC), VNI Windows, Unicode tổ hợp và bỏ dấu.</p>
+        </div>
+        <div>
+          <div class="sample">
+            <div class="row"><span>Trước</span><span>TiÕng ViÖt cã dÊu</span></div>
+            <div class="row"><span>Sau</span><span>Tiếng Việt có dấu</span></div>
+          </div>
+          <div class="sample">
+            <div class="row"><span>Bỏ dấu</span><span>Tieng Viet co dau</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="split">
+        <div>
+          <h2>Gõ tắt cho những cụm bạn gõ mỗi ngày</h2>
+          <p class="intro">Chọn “Sửa bảng gõ tắt” trong menu, mỗi dòng một cặp từ tắt và nội dung. Lưu file là GoViet dùng ngay, không cần khởi động lại.</p>
+        </div>
+        <div class="sample">
+          <div class="row"><span>vn</span><span>Việt Nam</span></div>
+          <div class="row"><span>ko</span><span>không</span></div>
+          <div class="row"><span>tphcm</span><span>Thành phố Hồ Chí Minh</span></div>
+          <div class="row"><span>ctn</span><span>Cảm ơn anh chị đã liên hệ</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="hoi-dap">
+      <h2>Hỏi đáp</h2>
+      <dl class="faq">
+        <dt>Windows báo “Windows protected your PC” khi mở file?</dt>
+        <dd>File chưa được ký số nên SmartScreen cảnh báo ở lần chạy đầu. Chọn “More info” rồi “Run anyway”. Mã nguồn công khai trên GitHub để bạn tự kiểm tra hoặc tự build.</dd>
+        <dt>Có dùng chung với Unikey hay EVKey được không?</dt>
+        <dd>Nên tắt bộ gõ khác trước khi bật GoViet, vì hai bộ gõ cùng chạy sẽ bỏ dấu chồng lên nhau.</dd>
+        <dt>Sao không gõ được dấu trong một số phần mềm?</dt>
+        <dd>Phần mềm chạy bằng quyền Administrator không nhận phím từ ứng dụng thường. Click chuột phải vào GoViet.exe và chọn “Run as administrator” nếu cần gõ trong các phần mềm đó.</dd>
+        <dt>GoViet có thu thập dữ liệu gõ phím không?</dt>
+        <dd>Không. GoViet chỉ xử lý từ đang gõ ngay trên máy, không kết nối mạng và không lưu nội dung bạn gõ.</dd>
+      </dl>
+    </section>
+  </main>
+</div>
+
+<footer>
+  <div class="wrap">
+    <span>GoViet do <a href="https://zenix.vn">Zenix Labs</a> phát triển. Phát hành theo giấy phép MIT.</span>
+    <span><a href="https://github.com/zenix-vn/go-viet-windows">github.com/zenix-vn/go-viet-windows</a></span>
+  </div>
+</footer>
+
+<script>
+(function () {
+  // Mỗi cụm: các phím gõ và chữ hiện trên màn hình sau từng phím (đúng như engine GoViet xử lý).
+  const SCRIPTS = {
+    telex: [
+      ["t","t"],["i","ti"],["e","tie"],["e","tiê"],["n","tiên"],["g","tiêng"],["s","tiếng"],[" ","tiếng "],
+      ["V","tiếng V"],["i","tiếng Vi"],["e","tiếng Vie"],["e","tiếng Viê"],["t","tiếng Viêt"],["j","tiếng Việt"],[" ","tiếng Việt "],
+      ["d","tiếng Việt d"],["d","tiếng Việt đ"],["e","tiếng Việt đe"],["e","tiếng Việt đê"],["p","tiếng Việt đêp"],["j","tiếng Việt đẹp"]
+    ],
+    vni: [
+      ["t","t"],["i","ti"],["e","tie"],["6","tiê"],["n","tiên"],["g","tiêng"],["1","tiếng"],[" ","tiếng "],
+      ["V","tiếng V"],["i","tiếng Vi"],["e","tiếng Vie"],["6","tiếng Viê"],["t","tiếng Viêt"],["5","tiếng Việt"],[" ","tiếng Việt "],
+      ["d","tiếng Việt d"],["9","tiếng Việt đ"],["e","tiếng Việt đe"],["6","tiếng Việt đê"],["p","tiếng Việt đêp"],["5","tiếng Việt đẹp"]
+    ]
+  };
+  const screen = document.getElementById("screen");
+  const keys = document.getElementById("keys");
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let method = "telex", step = 0, timer = null;
+
+  function render(prev, next) {
+    screen.textContent = "";
+    const a = Array.from(prev), b = Array.from(next);
+    b.forEach((c, i) => {
+      const s = document.createElement("span");
+      s.className = "ch";
+      s.textContent = c;
+      // Tô sáng chữ vừa được bộ gõ thay đổi (thêm dấu), không tô chữ vừa gõ thêm.
+      if (i < a.length && a[i] !== c) s.classList.add("new");
+      screen.appendChild(s);
+    });
+    const caret = document.createElement("span");
+    caret.className = "caret";
+    screen.appendChild(caret);
+    requestAnimationFrame(() => setTimeout(() => screen.querySelectorAll(".new").forEach(n => n.classList.remove("new")), 450));
+  }
+
+  function addKey(k, wordStart) {
+    if (wordStart) keys.textContent = "";
+    const el = document.createElement("span");
+    el.className = "key" + (k === " " ? " space" : "");
+    el.textContent = k === " " ? "space" : k;
+    if (/[sfrxjw0-9]/.test(k) || (k === "e" || k === "d") && keys.lastChild && keys.lastChild.textContent === k) el.classList.add("mod");
+    keys.appendChild(el);
+  }
+
+  function tick() {
+    const seq = SCRIPTS[method];
+    if (step >= seq.length) {
+      timer = setTimeout(() => { step = 0; screen.textContent = ""; keys.textContent = ""; tick(); }, 2600);
+      return;
+    }
+    const prev = step ? seq[step - 1][1] : "";
+    const [k, shown] = seq[step];
+    addKey(k, step > 0 && seq[step - 1][0] === " ");
+    render(prev, shown);
+    step++;
+    timer = setTimeout(tick, k === " " ? 700 : 260);
+  }
+
+  function showFinal() {
+    const seq = SCRIPTS[method];
+    keys.textContent = "";
+    seq.slice(-6).forEach(([k]) => addKey(k, false));
+    render(seq[seq.length - 1][1], seq[seq.length - 1][1]);
+  }
+
+  document.querySelectorAll(".switch button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      method = btn.dataset.method;
+      document.querySelectorAll(".switch button").forEach(b => b.setAttribute("aria-pressed", String(b === btn)));
+      clearTimeout(timer); step = 0; keys.textContent = "";
+      reduce ? showFinal() : tick();
+    });
+  });
+
+  reduce ? showFinal() : tick();
+})();
+</script>
+</body>
+</html>
