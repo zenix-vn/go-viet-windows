@@ -1,0 +1,49 @@
+// Hộp thoại chính của GoViet, ghép vào goviet.rc bởi build.rs ({VERSION} được thay khi build).
+// Không include <windows.h> để không phụ thuộc đường dẫn SDK: tự khai báo các hằng cần dùng.
+// Mã điều khiển phải khớp với src/dialog.rs.
+
+#define WS_TABSTOP       0x00010000L
+#define WS_GROUP         0x00020000L
+#define WS_MINIMIZEBOX   0x00020000L
+#define WS_SYSMENU       0x00080000L
+#define WS_VSCROLL       0x00200000L
+#define WS_CAPTION       0x00C00000L
+#define WS_EX_APPWINDOW  0x00040000L
+#define DS_SETFONT       0x40L
+#define DS_MODALFRAME    0x80L
+#define DS_CENTER        0x800L
+#define CBS_DROPDOWNLIST 0x0003L
+#define SS_NOPREFIX      0x0080L
+#define IDCANCEL         2
+
+100 DIALOGEX 0, 0, 250, 246
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "GoViet"
+FONT 9, "Segoe UI", 400, 0, 1
+BEGIN
+    ICON            "", 211, 12, 10, 20, 20
+    LTEXT           "GoViet", 212, 44, 7, 196, 16, SS_NOPREFIX
+    LTEXT           "Bộ gõ tiếng Việt cho Windows · phiên bản {VERSION}", 213, 44, 24, 196, 10, SS_NOPREFIX
+
+    GROUPBOX        "Chế độ gõ", -1, 10, 44, 230, 64
+    AUTORADIOBUTTON "Tiếng Việt", 201, 22, 58, 80, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "English", 202, 110, 58, 80, 10, NOT WS_TABSTOP
+    LTEXT           "Kiểu gõ:", -1, 22, 77, 54, 9
+    COMBOBOX        203, 80, 75, 100, 60, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP | WS_GROUP
+    LTEXT           "Bảng mã:", -1, 22, 93, 54, 9
+    LTEXT           "Unicode dựng sẵn", -1, 80, 93, 150, 9
+
+    GROUPBOX        "Tuỳ chọn", -1, 10, 114, 230, 76
+    AUTOCHECKBOX    "Đặt dấu kiểu mới (oà, uý thay cho òa, úy)", 204, 22, 128, 210, 10, WS_GROUP | WS_TABSTOP
+    AUTOCHECKBOX    "Bật gõ tắt", 205, 22, 144, 110, 10, WS_TABSTOP
+    PUSHBUTTON      "Sửa bảng gõ tắt...", 206, 150, 141, 80, 15, WS_TABSTOP
+    AUTOCHECKBOX    "Khởi động cùng Windows", 207, 22, 160, 210, 10, WS_TABSTOP
+    AUTOCHECKBOX    "Hiện hộp thoại này khi mở GoViet", 208, 22, 175, 210, 10, WS_TABSTOP
+
+    LTEXT           "Ctrl+Shift: bật/tắt tiếng Việt · Ctrl+Shift+F9: chuyển mã clipboard\nBấm Đóng để GoViet tiếp tục chạy dưới khay hệ thống.", 214, 10, 196, 230, 18, SS_NOPREFIX
+
+    PUSHBUTTON      "Giới thiệu", 209, 10, 225, 60, 15, WS_TABSTOP
+    PUSHBUTTON      "Kết thúc", 210, 116, 225, 60, 15, WS_TABSTOP
+    DEFPUSHBUTTON   "Đóng", IDCANCEL, 180, 225, 60, 15, WS_TABSTOP
+END

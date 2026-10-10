@@ -17,6 +17,7 @@ Phát triển bởi [Zenix Labs](https://zenix.vn).
 - **Ctrl+Shift** hoặc click icon khay để bật/tắt tiếng Việt (icon xanh: tiếng Việt, icon xám: tiếng Anh)
 - **Gõ tắt**: `vn` → Việt Nam, `VN` → VIỆT NAM; sửa bảng trong `%APPDATA%\GoViet\macros.txt`, lưu là dùng ngay
 - **Chuyển mã clipboard**: TCVN3 (ABC) ↔ Unicode, VNI Windows ↔ Unicode, Unicode tổ hợp → dựng sẵn, bỏ dấu. **Ctrl+Shift+F9** lặp lại lần chuyển trước
+- **Hộp thoại GoViet** hiện khi mở app (tắt được): bật/tắt tiếng Việt, kiểu gõ, tùy chọn. Bấm Đóng thì GoViet vẫn chạy dưới khay; mở lại exe hoặc chọn "Mở GoViet..." trên menu khay để hiện lại. Khởi động cùng Windows thì chạy thẳng xuống khay (`--tray`)
 - Menu chuột phải: Telex/VNI, kiểu đặt dấu, gõ tắt, chuyển mã, khởi động cùng Windows
 - Cửa sổ **Giới thiệu GoViet** trong app: phiên bản, phím tắt, tác giả Zenix Labs (liên kết tới zenix.vn)
 - Lưu cấu hình tại `%APPDATA%\GoViet\config.toml`

@@ -16,6 +16,8 @@ mod clipboard;
 #[cfg(any(windows, feature = "check-on-other-os"))]
 mod app;
 #[cfg(any(windows, feature = "check-on-other-os"))]
+mod dialog;
+#[cfg(any(windows, feature = "check-on-other-os"))]
 mod icon;
 #[cfg(any(windows, feature = "check-on-other-os"))]
 mod send;

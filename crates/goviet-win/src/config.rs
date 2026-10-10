@@ -14,6 +14,8 @@ pub struct Config {
     pub macros: bool,
     /// Kiểu chuyển mã clipboard dùng lần trước (Ctrl+Shift+F9 lặp lại).
     pub last_conversion: Conversion,
+    /// Hiện hộp thoại chính khi mở GoViet.
+    pub show_dialog: bool,
 }
 
 impl Default for Config {
@@ -24,6 +26,7 @@ impl Default for Config {
             modern_tone: false,
             macros: true,
             last_conversion: Conversion::TcvnToUnicode,
+            show_dialog: true,
         }
     }
 }
@@ -51,6 +54,7 @@ impl Config {
                 "vietnamese" => c.vietnamese = value == "true",
                 "modern_tone" => c.modern_tone = value == "true",
                 "macros" => c.macros = value == "true",
+                "show_dialog" => c.show_dialog = value == "true",
                 "last_conversion" => {
                     if let Some(conv) = Conversion::from_id(value) {
                         c.last_conversion = conv;
@@ -71,7 +75,7 @@ impl Config {
 
     pub fn to_text(self) -> String {
         format!(
-            "# Cấu hình GoViet\nvietnamese = {}\nmethod = \"{}\"\nmodern_tone = {}\nmacros = {}\nlast_conversion = \"{}\"\n",
+            "# Cấu hình GoViet\nvietnamese = {}\nmethod = \"{}\"\nmodern_tone = {}\nmacros = {}\nlast_conversion = \"{}\"\nshow_dialog = {}\n",
             self.vietnamese,
             match self.method {
                 InputMethod::Telex => "telex",
@@ -79,7 +83,8 @@ impl Config {
             },
             self.modern_tone,
             self.macros,
-            self.last_conversion.id()
+            self.last_conversion.id(),
+            self.show_dialog
         )
     }
 
@@ -127,6 +132,7 @@ mod tests {
             modern_tone: true,
             macros: false,
             last_conversion: Conversion::StripAccents,
+            show_dialog: false,
         };
         assert_eq!(Config::parse(&c.to_text()), c);
     }

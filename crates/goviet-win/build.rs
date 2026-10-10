@@ -69,8 +69,9 @@ END
         icon_off = path("goviet-off.ico"),
         manifest = manifest_path.display().to_string().replace('\\', "/"),
     );
+    let dialog = include_str!("res/dialog.rc").replace("{VERSION}", &version);
     let rc_path = out.join("goviet.rc");
-    std::fs::write(&rc_path, rc).unwrap();
+    std::fs::write(&rc_path, rc + &dialog).unwrap();
     embed_resource::compile(&rc_path, embed_resource::NONE)
         .manifest_required()
         .unwrap();

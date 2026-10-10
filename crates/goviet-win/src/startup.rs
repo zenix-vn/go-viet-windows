@@ -9,6 +9,8 @@ use windows_sys::Win32::System::Registry::{
 
 const RUN_KEY: &str = r"Software\Microsoft\Windows\CurrentVersion\Run";
 const VALUE_NAME: &str = "GoViet";
+/// Tham số dòng lệnh: chạy thẳng xuống khay, không hiện hộp thoại (dùng khi khởi động cùng Windows).
+pub const TRAY_ARG: &str = "--tray";
 
 pub fn is_enabled() -> bool {
     let key = wide(RUN_KEY);
@@ -36,7 +38,7 @@ pub fn set_enabled(enable: bool) {
             let Ok(exe) = std::env::current_exe() else {
                 return;
             };
-            let data = wide(&format!("\"{}\"", exe.display()));
+            let data = wide(&format!("\"{}\" {TRAY_ARG}", exe.display()));
             RegSetKeyValueW(
                 HKEY_CURRENT_USER,
                 key.as_ptr(),

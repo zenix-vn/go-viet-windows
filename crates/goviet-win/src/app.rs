@@ -2,6 +2,7 @@
 
 use crate::clipboard;
 use crate::config::Config;
+use crate::dialog;
 use crate::icon::{letter_icon, BLUE, RED};
 use crate::send::{self, INJECTED_MARK};
 use crate::startup;
@@ -30,24 +31,27 @@ use windows_sys::Win32::UI::Shell::{
     NIIF_WARNING, NIM_ADD, NIM_DELETE, NIM_MODIFY, NOTIFYICONDATAW,
 };
 use windows_sys::Win32::UI::WindowsAndMessaging::{
-    AppendMenuW, CallNextHookEx, CreatePopupMenu, CreateWindowExW, DefWindowProcW, DestroyIcon,
-    DestroyMenu, DestroyWindow, DispatchMessageW, GetCursorPos, GetForegroundWindow, GetMessageW,
-    GetSystemMetrics, LoadImageW, PostMessageW, PostQuitMessage, RegisterClassW,
-    RegisterWindowMessageW, SetForegroundWindow, SetWindowsHookExW, TrackPopupMenu,
-    TranslateMessage, UnhookWindowsHookEx, HC_ACTION, HHOOK, HICON, IMAGE_ICON, KBDLLHOOKSTRUCT,
-    LR_DEFAULTCOLOR, MF_CHECKED, MF_POPUP, MF_SEPARATOR, MF_STRING, MSG, SM_CXICON, SM_CXSMICON,
-    SW_SHOWNORMAL, TPM_NONOTIFY, TPM_RETURNCMD, TPM_RIGHTBUTTON, WH_KEYBOARD_LL, WH_MOUSE_LL,
-    WM_APP, WM_COMMAND, WM_DESTROY, WM_HOTKEY, WM_KEYDOWN, WM_KEYUP, WM_LBUTTONDOWN, WM_LBUTTONUP,
-    WM_MBUTTONDOWN, WM_NULL, WM_RBUTTONDOWN, WM_RBUTTONUP, WM_SYSKEYDOWN, WM_SYSKEYUP, WNDCLASSW,
-    WS_OVERLAPPED,
+    AllowSetForegroundWindow, AppendMenuW, CallNextHookEx, CreatePopupMenu, CreateWindowExW,
+    DefWindowProcW, DestroyIcon, DestroyMenu, DestroyWindow, DispatchMessageW, FindWindowW,
+    GetCursorPos, GetForegroundWindow, GetMessageW, GetSystemMetrics, LoadImageW, PostMessageW,
+    PostQuitMessage, RegisterClassW, RegisterWindowMessageW, SetForegroundWindow,
+    SetMenuDefaultItem, SetWindowsHookExW, TrackPopupMenu, TranslateMessage, UnhookWindowsHookEx,
+    ASFW_ANY, HC_ACTION, HHOOK, HICON, IMAGE_ICON, KBDLLHOOKSTRUCT, LR_DEFAULTCOLOR, MF_CHECKED,
+    MF_POPUP, MF_SEPARATOR, MF_STRING, MSG, SM_CXICON, SM_CXSMICON, SW_SHOWNORMAL, TPM_NONOTIFY,
+    TPM_RETURNCMD, TPM_RIGHTBUTTON, WH_KEYBOARD_LL, WH_MOUSE_LL, WM_APP, WM_COMMAND, WM_DESTROY,
+    WM_HOTKEY, WM_KEYDOWN, WM_KEYUP, WM_LBUTTONDOWN, WM_LBUTTONUP, WM_MBUTTONDOWN, WM_NULL,
+    WM_RBUTTONDOWN, WM_RBUTTONUP, WM_SYSKEYDOWN, WM_SYSKEYUP, WNDCLASSW, WS_OVERLAPPED,
 };
 
 const WM_TRAY: u32 = WM_APP + 1;
+/// Bản GoViet thứ hai gửi tới bản đang chạy: hiện hộp thoại rồi thoát.
+const WM_SHOW_DIALOG: u32 = WM_APP + 2;
+const TRAY_CLASS: &str = "GoVietTrayWindow";
 const TRAY_ID: u32 = 1;
 const HOTKEY_CONVERT: i32 = 1;
 
 /// Mã tài nguyên icon trong GoViet.exe (xem build.rs).
-const ICON_ON: u16 = 1;
+pub(crate) const ICON_ON: u16 = 1;
 const ICON_OFF: u16 = 2;
 
 const CMD_TOGGLE: usize = 1001;
@@ -59,6 +63,7 @@ const CMD_ABOUT: usize = 1006;
 const CMD_EXIT: usize = 1007;
 const CMD_MACROS: usize = 1008;
 const CMD_EDIT_MACROS: usize = 1009;
+const CMD_OPEN: usize = 1010;
 const CMD_CONVERT_LAST: usize = 1100;
 /// `CMD_CONVERT_BASE + i` = `Conversion::ALL[i]`.
 const CMD_CONVERT_BASE: usize = 1101;
@@ -266,12 +271,14 @@ impl App {
         self.engine.reset();
         self.config.save();
         self.update_tray(NIM_MODIFY);
+        dialog::refresh(&self.config);
     }
 
     fn apply_config(&mut self) {
         self.engine.set_options(self.config.engine_options());
         self.config.save();
         self.update_tray(NIM_MODIFY);
+        dialog::refresh(&self.config);
     }
 
     fn tray_data(&self) -> NOTIFYICONDATAW {
@@ -388,12 +395,42 @@ impl App {
                 self.apply_config();
             }
             CMD_EDIT_MACROS => self.edit_macros(),
-            CMD_STARTUP => startup::set_enabled(!startup::is_enabled()),
+            CMD_STARTUP => {
+                startup::set_enabled(!startup::is_enabled());
+                dialog::refresh(&self.config);
+            }
             CMD_CONVERT_LAST => self.convert_clipboard(self.config.last_conversion),
             id if (CMD_CONVERT_BASE..CMD_CONVERT_BASE + Conversion::ALL.len()).contains(&id) => {
                 self.convert_clipboard(Conversion::ALL[id - CMD_CONVERT_BASE])
             }
             _ => {}
+        }
+    }
+}
+
+/// Cấu hình hiện tại (cho hộp thoại).
+pub(crate) fn config() -> Option<Config> {
+    with_app(|app| app.config)
+}
+
+/// Đổi cấu hình từ hộp thoại: lưu, áp dụng cho engine, cập nhật icon khay.
+pub(crate) fn update_config(f: impl FnOnce(&mut Config)) {
+    with_app(|app| {
+        f(&mut app.config);
+        app.engine.reset();
+        app.apply_config();
+    });
+}
+
+pub(crate) fn edit_macros() {
+    with_app(|app| app.edit_macros());
+}
+
+/// Thoát hẳn GoViet.
+pub(crate) fn exit() {
+    if let Some(hwnd) = with_app(|app| app.hwnd) {
+        unsafe {
+            DestroyWindow(hwnd);
         }
     }
 }
@@ -460,6 +497,9 @@ fn show_menu(hwnd: HWND) {
     let on_startup = startup::is_enabled();
     unsafe {
         let menu = CreatePopupMenu();
+        menu_item(menu, CMD_OPEN, "Mở GoViet...", false);
+        SetMenuDefaultItem(menu, CMD_OPEN as u32, 0);
+        menu_separator(menu);
         menu_item(
             menu,
             CMD_TOGGLE,
@@ -527,6 +567,7 @@ fn show_menu(hwnd: HWND) {
 
         match cmd {
             0 => {}
+            CMD_OPEN => dialog::show(),
             CMD_ABOUT => crate::about::show(hwnd, ICON_ON),
             CMD_EXIT => {
                 DestroyWindow(hwnd);
@@ -553,6 +594,10 @@ unsafe extern "system" fn window_proc(
                 WM_RBUTTONUP => show_menu(hwnd),
                 _ => {}
             }
+            0
+        }
+        WM_SHOW_DIALOG => {
+            dialog::show();
             0
         }
         WM_HOTKEY => {
@@ -589,13 +634,20 @@ pub fn run() {
         let mutex_name = wide("Local\\GoViet.SingleInstance");
         let _mutex = CreateMutexW(null(), 0, mutex_name.as_ptr());
         if GetLastError() == ERROR_ALREADY_EXISTS {
+            // Đã có GoViet đang chạy: nhờ bản đó hiện hộp thoại.
+            let class_name = wide(TRAY_CLASS);
+            let running = FindWindowW(class_name.as_ptr(), null());
+            if !running.is_null() {
+                AllowSetForegroundWindow(ASFW_ANY);
+                PostMessageW(running, WM_SHOW_DIALOG, 0, 0);
+            }
             return;
         }
         // Manifest đã khai báo DPI awareness; gọi thêm cho trường hợp chạy bản build không có manifest.
         SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
 
         let instance = GetModuleHandleW(null());
-        let class_name = wide("GoVietTrayWindow");
+        let class_name = wide(TRAY_CLASS);
         let mut wc: WNDCLASSW = std::mem::zeroed();
         wc.lpfnWndProc = Some(window_proc);
         wc.hInstance = instance;
@@ -651,8 +703,20 @@ pub fn run() {
         let mouse = SetWindowsHookExW(WH_MOUSE_LL, Some(mouse_proc), instance, 0);
         HOOKS.with(|h| *h.borrow_mut() = (kb, mouse));
 
+        // Ghi lại lệnh khởi động (đường dẫn exe mới nhất, kèm --tray).
+        if startup::is_enabled() {
+            startup::set_enabled(true);
+        }
+        let silent = std::env::args().any(|a| a == startup::TRAY_ARG);
+        if !silent && config.show_dialog {
+            dialog::show();
+        }
+
         let mut msg: MSG = std::mem::zeroed();
         while GetMessageW(&mut msg, null_mut(), 0, 0) > 0 {
+            if dialog::handle_message(&msg) {
+                continue;
+            }
             TranslateMessage(&msg);
             DispatchMessageW(&msg);
         }
