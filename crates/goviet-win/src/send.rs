@@ -28,9 +28,20 @@ pub fn replace(backspaces: usize, text: &str) {
     replace_then_key(backspaces, text, None);
 }
 
+/// Ký tự đệm gõ trước khi xóa: thay thế phần gợi ý đang bôi đen (thanh địa chỉ trình duyệt,
+/// ô Excel) để Backspace xóa đúng chữ đang gõ, rồi chính nó cũng bị xóa bằng một Backspace thêm.
+const FILLER: u16 = 0x202F; // NARROW NO-BREAK SPACE
+
 /// Như [`replace`], sau đó gõ lại phím `vk` (ví dụ dấu cách đã kích hoạt gõ tắt).
 pub fn replace_then_key(backspaces: usize, text: &str, vk: Option<u16>) {
-    let mut inputs = Vec::with_capacity(backspaces * 2 + text.len() * 2 + 2);
+    let mut inputs = Vec::with_capacity(backspaces * 2 + text.len() * 2 + 6);
+    let backspaces = if backspaces > 0 {
+        inputs.push(key(0, FILLER, KEYEVENTF_UNICODE));
+        inputs.push(key(0, FILLER, KEYEVENTF_UNICODE | KEYEVENTF_KEYUP));
+        backspaces + 1
+    } else {
+        0
+    };
     for _ in 0..backspaces {
         inputs.push(key(VK_BACK, 0, 0));
         inputs.push(key(VK_BACK, 0, KEYEVENTF_KEYUP));
